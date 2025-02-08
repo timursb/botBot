@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from database import add_photo, get_random_photo
 
 #  Токен бота
-TOKEN = "7918646403:AAGWfUIq5xPzOwwyfQG2eAu3bYwiWVPxOK0"
+TOKEN = "7801520051:AAHRzF3Zj4U2dH6cxParfjeR0zf46lCfapM"
 
 # Создаём бота и диспетчер
 bot = Bot(token=TOKEN)
