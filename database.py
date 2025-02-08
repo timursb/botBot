@@ -1,46 +1,30 @@
 import sqlite3
-import random
 
+DB_PATH = "database.db"
 
-# Создание базы данных
-def init_db():
-    conn = sqlite3.connect("photos.db")  # Файл базы
+#  Добавление фото в базу
+def add_photo(file_id):
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS photos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            file_id TEXT UNIQUE
-        )
-    """)
+    cursor.execute("CREATE TABLE IF NOT EXISTS photos (file_id TEXT)")
+    cursor.execute("INSERT INTO photos (file_id) VALUES (?)", (file_id,))
     conn.commit()
     conn.close()
 
-
-# Добавление фото в базу
-def add_photo(file_id):
-    conn = sqlite3.connect("photos.db")
-    cursor = conn.cursor()
-    try:
-        cursor.execute("INSERT INTO photos (file_id) VALUES (?)", (file_id,))
-        conn.commit()
-    except sqlite3.IntegrityError:
-        pass  # Если фото уже есть, просто игнорим ошибку
-    finally:
-        conn.close()
-
-
-# Получение рандомного фото
+#  Получение случайного фото
 def get_random_photo():
-    conn = sqlite3.connect("photos.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT file_id FROM photos")
-    photos = cursor.fetchall()
+    cursor.execute("SELECT file_id FROM photos ORDER BY RANDOM() LIMIT 1")
+    result = cursor.fetchone()
     conn.close()
+    return result[0] if result else None
 
-    if photos:
-        return random.choice(photos)[0]  # Выбираем рандомное фото
-    return None
-
-
-# Инициализация базы при запуске
-init_db()
+#  Очистка базы данных (удаляем все фото)
+def clear_photos():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM photos")  # Удаляем фото
+    conn.commit()
+    conn.close()
+    print("📁 База данных очищена!")  # Проверка в консоли
