@@ -61,7 +61,7 @@ Randomchik-Photo-bot/
 
 # 🚀 Запуск бота
 
-**python main.py**
+ в терминад вводим команду **python main.py**
 
 # 🎯 Пример работы
 
