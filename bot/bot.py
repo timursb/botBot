@@ -38,7 +38,7 @@ class PhotoState(StatesGroup):
 
 class AlbumState(StatesGroup):
     waiting_for_album_request = State()
-    waiting_for_album_deletion = State()  # Состояние для удаления альбома
+    waiting_for_album_deletion = State()
 
 # Команда /start
 @router.message(Command("start"))
@@ -65,10 +65,10 @@ async def save_photos(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await state.get_data()
     album_name = data.get("album_name")
-    for photo in message.photo:
-        add_photo(photo.file_id, user_id, album_name)
+    file_id = message.photo[-1].file_id  # Берём наибольшее по размеру фото
+    add_photo(file_id, user_id, album_name)
 
-    await message.answer(f"Фото добавлены в альбом {album_name}! 📸")
+    await message.answer(f"Фото добавлено в альбом {album_name}! 📸")
     await state.clear()
 
 # Кнопка "Случайное фото из альбома"
@@ -81,19 +81,16 @@ async def ask_for_album_name_for_request(message: Message, state: FSMContext):
 @router.message(AlbumState.waiting_for_album_request)
 async def send_photo_from_album(message: Message, state: FSMContext):
     album_name = message.text
-    user_id = message.from_user.id
-
-    file_id = get_random_photo_from_album(user_id, album_name)
+    file_id = get_random_photo_from_album(album_name)
 
     if file_id:
         await message.answer_photo(file_id, caption=f"Вот случайное фото из альбома {album_name}! 📂")
-        await state.update_data(last_album=album_name)
     else:
         await message.answer(f"В альбоме {album_name} пока нет фото или он не существует.")
 
     await state.clear()
 
-# Кнопка "Удалить альбом" (запрос названия альбома)
+# Кнопка "Удалить альбом"
 @router.message(F.text == "🗑 Удалить альбом")
 async def ask_for_album_deletion(message: Message, state: FSMContext):
     await message.answer("Введите название альбома, который хотите удалить:")
@@ -103,8 +100,8 @@ async def ask_for_album_deletion(message: Message, state: FSMContext):
 @router.message(AlbumState.waiting_for_album_deletion)
 async def delete_album_photos(message: Message, state: FSMContext):
     album_name = message.text
-    delete_album(album_name)  # Удаляем альбом
-    await message.answer(f"Все фото из альбома {album_name} удалены. 🗑")
+    delete_album(album_name)
+    await message.answer(f"Все фото из альбома {album_name} удалены.🗑")
     await state.clear()
 
 # Кнопка "Завершить работу"
@@ -120,8 +117,6 @@ async def main():
 
 if __name__ == "__main__":
     import sys
-
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
     asyncio.run(main())
